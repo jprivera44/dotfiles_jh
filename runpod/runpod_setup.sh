@@ -1,3 +1,7 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+
 # Always work in /workspace
 cd /workspace
 
@@ -26,8 +30,13 @@ fi
 
 # --- Create/refresh the project venv and deps
 # uv sync creates .venv based on pyproject/uv.lock
-make setup
-source .venv/bin/activate
+#wrap below in if statement to not run make setup again
+if [ -d ".venv" ]; then
+  source .venv/bin/activate
+else
+  make setup
+  source .venv/bin/activate
+fi
 
 # Make sure the HF CLI is present inside the venv (so we can use `hf`)
 uv run pip install -U huggingface_hub
@@ -43,9 +52,34 @@ if [ -n "${HUGGINGFACE_HUB_TOKEN:-}" ]; then
 fi
 
 # sanity (won’t print your token)
-uv run hf whoami || true
+uv run hf api whoami || true
 
-# --- Optional project setup
-if [ -f Makefile ]; then
-  make setup || true
+
+#now running the set up commands
+if [ ! -x /home/linuxbrew/.linuxbrew/bin/brew ]; then
+  NONINTERACTIVE=1 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 fi
+
+# 1) Put brew on *this* shell's PATH now
+eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+
+# 2) Make it persist for future shells (login + interactive zsh)
+grep -q 'brew shellenv' ~/.zprofile || echo 'eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"' >> ~/.zprofile
+grep -q 'brew shellenv' ~/.zshrc    || echo 'eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"' >> ~/.zshrc
+
+echo 'export PATH="/home/linuxbrew/.linuxbrew/bin:/home/linuxbrew/.linuxbrew/sbin:$PATH"' >> ~/.zshrc
+
+
+# 3) Install Claude Code if missing
+brew list --cask claude-code >/dev/null 2>&1 || brew install --cask claude-code
+
+source ~/.zshrc
+
+# 4) Sanity checks
+command -v brew
+command -v claude
+claude --version
+
+# Configure Git identity
+git config --global user.email "jprivera44@gmail.com"
+git config --global user.name "jprivera44"
