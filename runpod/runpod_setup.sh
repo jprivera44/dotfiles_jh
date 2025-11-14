@@ -52,7 +52,7 @@ if [ -n "${HUGGINGFACE_HUB_TOKEN:-}" ]; then
 fi
 
 # sanity (won’t print your token)
-uv run hf api whoami || true
+uv run hf auth whoami || true
 
 
 #now running the set up commands
@@ -73,7 +73,7 @@ echo 'export PATH="/home/linuxbrew/.linuxbrew/bin:/home/linuxbrew/.linuxbrew/sbi
 # 3) Install Claude Code if missing
 brew list --cask claude-code >/dev/null 2>&1 || brew install --cask claude-code
 
-source ~/.zshrc
+#source ~/.zshrc
 
 # 4) Sanity checks
 command -v brew
@@ -83,3 +83,6 @@ claude --version
 # Configure Git identity
 git config --global user.email "jprivera44@gmail.com"
 git config --global user.name "jprivera44"
+
+echo "Git configured: $(git config --global user.name) <$(git config --global user.email)>"
+
