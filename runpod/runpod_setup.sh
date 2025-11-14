@@ -1,55 +1,51 @@
-
-cd ..
-./install.sh --tmux --zsh || true
-./deploy.sh || true
-
+# Always work in /workspace
 cd /workspace
 
-cd collusion monitors
-# 2) Your repo
+# --- Your repo (SSH clone). Do NOT cd before cloning.
 if [ ! -d "collusion-monitors" ]; then
-  # Pick ONE method. If repo is private, use SSH and connect with agent forwarding.
-  git clone git@github.com:jprivera44/collusion-monitors.git collusion-monitors 
-   
+  git clone git@github.com:jprivera44/collusion-monitors.git collusion-monitors
 fi
 cd /workspace/collusion-monitors
 
-
-cd /workspace/collusion-monitors
+# Make sure branch exists locally
 git fetch --all --prune || true
 git checkout initial-setup || true
 
-
-uv run pip install -U huggingface_hub >/dev/null 2>&1 || true
-
-# Put all HF files under /workspace/hf
+# --- Hugging Face: keep everything in /workspace
 export HF_HOME="/workspace/hf"
 export TRANSFORMERS_CACHE="/workspace/hf/transformers"
 export HF_DATASETS_CACHE="/workspace/hf/datasets"
-
-# Make sure the dirs exist and perms are safe
 mkdir -p "$HF_HOME" "$TRANSFORMERS_CACHE" "$HF_DATASETS_CACHE"
 chmod 700 "$HF_HOME"
 
-# Install CLI (if not already)
-uv run pip install -U "huggingface_hub"
+# --- Ensure uv is available (only if it's not already installed earlier)
+if ! command -v uv >/dev/null 2>&1; then
+  curl -LsSf https://astral.sh/uv/install.sh | sh
+  . "$HOME/.local/bin/env"
+fi
 
+# --- Create/refresh the project venv and deps
+# uv sync creates .venv based on pyproject/uv.lock
+make setup
 source .venv/bin/activate
 
-# Non-interactive login using your template env var
+# Make sure the HF CLI is present inside the venv (so we can use `hf`)
+uv run pip install -U huggingface_hub
+
+# --- Non-interactive login with the new CLI (force `hf`)
 if [ -n "${HUGGINGFACE_HUB_TOKEN:-}" ]; then
-  # Write the token to HF_HOME (not ~/.cache)
+  # also write token under HF_HOME (avoids ~/.cache)
   printf "%s" "$HUGGINGFACE_HUB_TOKEN" > "$HF_HOME/token"
   chmod 600 "$HF_HOME/token"
 
-  # Also register the token with the CLI + git credential helper
-  hf auth login --token "$HUGGINGFACE_HUB_TOKEN" --add-to-git-credential
+  # login via uv-run so we don't need to activate .venv
+  uv run hf auth login --token "$HUGGINGFACE_HUB_TOKEN" --add-to-git-credential
 fi
 
-# Quick sanity check (won't print your token)
-huggingface-cli whoami || true
+# sanity (won’t print your token)
+uv run hf whoami || true
 
-# 4) optional: run your project setup if Makefile exists
+# --- Optional project setup
 if [ -f Makefile ]; then
   make setup || true
 fi
