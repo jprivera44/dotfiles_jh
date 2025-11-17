@@ -5,6 +5,15 @@ set -euo pipefail
 # Always work in /workspace
 cd /workspace
 
+# --- Install zsh and dotfiles first ---
+cd /workspace/dotfiles_jh
+git checkout jprivera-config || true
+./install.sh --tmux --zsh
+# Now go back to workspace
+cd /workspace
+
+
+
 # --- Your repo (SSH clone). Do NOT cd before cloning.
 if [ ! -d "collusion-monitors" ]; then
   git clone git@github.com:jprivera44/collusion-monitors.git collusion-monitors
