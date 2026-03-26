@@ -5,6 +5,10 @@ set -euo pipefail
 # Always work in /workspace
 cd /workspace
 
+# --- Persist Claude Code state on network volume ---
+mkdir -p /workspace/.claude
+ln -sfn /workspace/.claude ~/.claude
+
 # --- Install zsh and dotfiles first ---
 cd /workspace/dotfiles_jh
 git checkout jprivera-config || true

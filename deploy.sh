@@ -52,6 +52,6 @@ if [ -n "${ALIASES+x}" ]; then
 fi
 
 echo "changing default shell to zsh"
-chsh -s $(which zsh)
+#chsh -s $(which zsh)
 
-zsh
+exec zsh
