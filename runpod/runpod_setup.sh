@@ -20,7 +20,7 @@ cd /workspace
 
 # --- Your repo (SSH clone). Do NOT cd before cloning.
 if [ ! -d "collusion-monitors" ]; then
-  git clone git@github.com:jprivera44/collusion-monitors.git collusion-monitors
+  git clone https://github.com/jprivera44/collusion-monitors.git collusion-monitors
 fi
 cd /workspace/collusion-monitors
 
